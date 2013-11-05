@@ -5,24 +5,27 @@ from random import seed, random, uniform
 
 import numpy as np
 
+import plot_graph as pg
 
-seed(1)  # we set the random seed to 1 in order to have always the same results
 
-NB_RUN = 10  # how many times we will run algorithm
+seed(42)  # we set the random seed in order to have always the same results
 
-NB_DIMENSIONS = 1  # number of dimensions of the search space
-NB_PARTICLES = 100
+NB_RUN = 1  # how many times we will run algorithm
+
+NB_DIMENSIONS = 2  # number of dimensions of the search space
+NB_PARTICLES = 5
 ITER_MAX = 1000
 
 # limits of velocity
-V_MIN = -5.0
-V_MAX = 5.0
+V_MIN = -10.0
+V_MAX = (-1) * V_MIN
 # limits of the search space
-P_MIN = -50.0
-P_MAX = 50.0
+P_MIN = -500.0
+P_MAX = (-1) * P_MIN
 
 W = 1  # weight of inertia during velocity update (not required here)
-C1 = C2 = 2  # weights of particle memory and group influence
+C1 = 1.5  # weight of particle memory
+C2 = 2  # weight of group influence
 
 
 def circle_problem(x):
@@ -83,11 +86,11 @@ class Particle():
 
     def __init_velocity(self):
         """
-            Random velocity in each dimension
+            Random velocity between -1 and 1 in each dimension
         """
 
         self.velocity = np.array(
-            [uniform(V_MIN, V_MAX) for i in xrange(NB_DIMENSIONS)]
+            [uniform(-1, 1) for i in xrange(NB_DIMENSIONS)]
         )
 
     def evaluate(self, func):
@@ -113,7 +116,7 @@ class Particle():
         r1 = random()
         r2 = random()
 
-        inertia = self.velocity
+        inertia = W * self.velocity
         particle_memory = C1 * r1 * (self.best_position - self.position)
         influence = C2 * r2 * (swarm_best_pos - self.position)
 
@@ -172,17 +175,15 @@ def swarm_simulation(func):
 
         # we calculate the best fitness for a *fully connected* particle group
         for particle in swarm:
+            pg.add_particle(particle)
             fitness = particle.evaluate(func)
             if fitness < swarm_best_fitness or swarm_best_fitness == -1:
                 swarm_best_fitness = fitness
                 swarm_best_pos = particle.position
 
-        # then we update particle positions...
-        # Or should we change them in the same loop than fitness calculation?
-        # It could be ok in this algo, but I prefer to be careful (wait for
-        # the rest of the exercise)
+        # then we update particle positions
         for particle in swarm:
-            particle.update_velocity(swarm_best_fitness)
+            particle.update_velocity(swarm_best_pos)
             particle.update_position()
 
     return swarm_best_pos, swarm_best_fitness
@@ -194,3 +195,4 @@ if __name__ == "__main__":
         (solution, fitness) = swarm_simulation(EVAL_FUNCTION)
 
         print "Solution (fitness = %.3f): %s" % (fitness, str(solution))
+        pg.show()

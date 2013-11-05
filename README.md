@@ -5,4 +5,5 @@ Particule Swarn Optimization program for AI programming course
 
 ## External libraries
 
-* numpy (http://www.numpy.org/)
+* Numpy (http://www.numpy.org/)
+* Matplotlib (http://matplotlib.org/)
