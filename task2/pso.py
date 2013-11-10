@@ -11,19 +11,21 @@ import plot_graph as pg
 seed(42)  # we set the random seed in order to have always the same results
 
 GRAPH_OUTPUT = True
+DECREASE_WEIGHT = True
 
-NB_RUN = 10  # how many times we will run algorithm
+NB_RUN = 1  # how many times we will run algorithm
 
-NB_DIMENSIONS = 2  # number of dimensions of the search space
-NB_PARTICLES = 18
+NB_DIMENSIONS = 1  # number of dimensions of the search space
+NB_PARTICLES = 9
 NB_NEIGHBOURS = min(3, NB_PARTICLES)
 ITER_MAX = 1000
 
 # limits of velocity and of the search space
-V_MAX, P_MAX = 5.0, 100.0
+V_MAX, P_MAX = 5.0, 1000.0
 V_MIN, P_MIN = (-1) * V_MAX, (-1) * P_MAX
 
-W = 1  # weight of inertia during velocity update
+MIN_WEIGHT = 0.4
+weight = 1.0  # weight of inertia during velocity update
 C1 = 1.5  # weight of particle memory
 C2 = 2  # weight of group influence
 
@@ -119,7 +121,7 @@ class Particle():
         r1 = random()
         r2 = random()
 
-        inertia = W * self.velocity
+        inertia = weight * self.velocity
         particle_memory = C1 * r1 * (self.best_position - self.position)
         influence = C2 * r2 * (swarm_best_pos - self.position)
 
@@ -211,6 +213,17 @@ def get_group_best_pos(particle, swarm, group_len=NB_NEIGHBOURS):
     return best_particle.position
 
 
+def decrease_weight():
+    """
+        Decreases weight in order to give less importance to inertia
+        weight can decrease till MIN_WEIGHT
+    """
+
+    if DECREASE_WEIGHT:
+        global weight
+        weight = max(MIN_WEIGHT, weight * 0.999)
+
+
 def swarm_simulation(func):
     """
         Minimizes func by simulating the behaviour of a particle swarm
@@ -242,6 +255,8 @@ def swarm_simulation(func):
             group_best_pos = get_group_best_pos(particle, swarm)
             particle.update_velocity(group_best_pos)
             particle.update_position()
+
+        decrease_weight()
 
     return swarm_best_pos, swarm_best_fitness, nb_iter + 1
 
