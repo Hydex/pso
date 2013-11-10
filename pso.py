@@ -10,18 +10,17 @@ import plot_graph as pg
 
 seed(42)  # we set the random seed in order to have always the same results
 
-NB_RUN = 1  # how many times we will run algorithm
+GRAPH_OUTPUT = True
+
+NB_RUN = 10  # how many times we will run algorithm
 
 NB_DIMENSIONS = 2  # number of dimensions of the search space
-NB_PARTICLES = 5
+NB_PARTICLES = 2
 ITER_MAX = 1000
 
-# limits of velocity
-V_MIN = -10.0
-V_MAX = (-1) * V_MIN
-# limits of the search space
-P_MIN = -500.0
-P_MAX = (-1) * P_MIN
+# limits of velocity and of the search space
+V_MAX, P_MAX = 5.0, 100.0
+V_MIN, P_MIN = (-1) * V_MAX, (-1) * P_MAX
 
 W = 1  # weight of inertia during velocity update (not required here)
 C1 = 1.5  # weight of particle memory
@@ -72,6 +71,7 @@ class Particle():
         self.__init_position()
         self.__init_velocity()
 
+        self.fitness = -1
         self.best_fitness = -1
         self.best_position = None
 
@@ -81,7 +81,8 @@ class Particle():
         """
 
         self.position = np.array(
-            [uniform(P_MIN, P_MAX) for i in xrange(NB_DIMENSIONS)]
+            [uniform(P_MIN, P_MAX) for i in xrange(NB_DIMENSIONS)],
+            float
         )
 
     def __init_velocity(self):
@@ -90,7 +91,8 @@ class Particle():
         """
 
         self.velocity = np.array(
-            [uniform(-1, 1) for i in xrange(NB_DIMENSIONS)]
+            [uniform(-1, 1) for i in xrange(NB_DIMENSIONS)],
+            float
         )
 
     def evaluate(self, func):
@@ -99,12 +101,12 @@ class Particle():
             The best fitness of the particle is updated if fitness is better
         """
 
-        fitness = func(self.position)
-        if fitness < self.best_fitness or self.best_fitness == -1:
-            self.best_fitness = fitness
+        self.fitness = func(self.position)
+        if self.fitness < self.best_fitness or self.best_fitness == -1:
+            self.best_fitness = self.fitness
             self.best_position = self.position
 
-        return fitness
+        return self.fitness
 
     def update_velocity(self, swarm_best_pos):
         """
@@ -167,32 +169,37 @@ def swarm_simulation(func):
     swarm_best_pos = None
     swarm_best_fitness = -1
 
-    for i in xrange(ITER_MAX):
+    nb_iter = 0
+    for nb_iter in xrange(ITER_MAX):
         # if the fitness is good enough, we quit the loop
         if swarm_best_fitness <= 0.001 and swarm_best_fitness != -1:
-            print "Best fitness!"
             break
 
         # we calculate the best fitness for a *fully connected* particle group
         for particle in swarm:
-            pg.add_particle(particle)
             fitness = particle.evaluate(func)
             if fitness < swarm_best_fitness or swarm_best_fitness == -1:
                 swarm_best_fitness = fitness
                 swarm_best_pos = particle.position
+            pg.add_particle(particle)
 
         # then we update particle positions
         for particle in swarm:
             particle.update_velocity(swarm_best_pos)
             particle.update_position()
 
-    return swarm_best_pos, swarm_best_fitness
+    return swarm_best_pos, swarm_best_fitness, nb_iter + 1
 
 
 if __name__ == "__main__":
 
     for i in xrange(NB_RUN):
-        (solution, fitness) = swarm_simulation(EVAL_FUNCTION)
+        if GRAPH_OUTPUT:
+            pg.init(NB_DIMENSIONS)
 
-        print "Solution (fitness = %.3f): %s" % (fitness, str(solution))
+        (solution, fitness, nb_iter) = swarm_simulation(EVAL_FUNCTION)
+
+        print "End (fitness = %.3f ; iteration = %d)\n%s" % \
+            (fitness, nb_iter, str(solution))
+
         pg.show()

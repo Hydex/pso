@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # required for projection='3d'
 
 
 def __generate_hex_color(id):
+    """
+        Returns a hexadecimal color according to id
+    """
 
     colors = (
         "#2c2c2c", "#ff5a14",
@@ -27,20 +31,54 @@ def __generate_hex_color(id):
     return colors[id % len(colors)]
 
 
+is_init = False
+fig = None
+ax = None
+
+
+def init(dim):
+    """
+        Initializes graph output
+        Set is_init to True
+    """
+
+    global is_init, fig, ax
+
+    if dim == 2:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+    is_init = True
+
+
 def add_particle(particle):
+    """
+        Add a particle to the graph
+        Required is_init == True
+    """
+
+    if not is_init:
+        return
+
     color = __generate_hex_color(particle.id)
 
-    x, y = 0, 0
     if len(particle.position) == 1:
-        x = particle.position[0]
+        x, y = particle.position[0], particle.fitness
+        plt.plot(x, y, color=color, marker='o')
     elif len(particle.position) == 2:
-        x, y = particle.position[0], particle.position[1]
+        x, y, z = particle.position[0], particle.position[1], particle.fitness
+        ax.scatter(x, y, z, c=color, marker='o')
     else:
         return
 
-    plt.plot(x, y, color=color, marker='o')
-
 
 def show():
+    """
+        Shows the graph.
+        Required is_init == True
+    """
+
+    if not is_init:
+        return
 
     plt.show()
