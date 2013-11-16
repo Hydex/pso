@@ -6,8 +6,6 @@ from math import exp
 
 import numpy as np
 
-import plot_graph as pg
-
 
 # Init list of packages
 packages = []
@@ -33,14 +31,13 @@ PROBA_TAKE_PKG = avg_max_pkg / len(packages)
 # seed(42)  # we set the random seed in order to have always the same results
 
 
-GRAPH_OUTPUT = False
 DECREASE_WEIGHT = False
 
 NB_RUN = 1  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
-NB_PARTICLES = 50
-ITER_MAX = 100
+NB_PARTICLES = 2000
+ITER_MAX = 500
 
 # limits of velocity
 V_MIN, V_MAX = -4.25, 4.25
@@ -49,7 +46,6 @@ MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
 C1 = 1.5  # weight of particle memory
 C2 = 1.5  # weight of group influence
-
 
 
 def calculate_knapsack(x):
@@ -130,7 +126,7 @@ class Particle():
         """
 
         self.position = np.array(
-            [True if random() <= PROBA_TAKE_PKG else False \
+            [True if random() <= PROBA_TAKE_PKG else False
                 for i in xrange(NB_DIMENSIONS)],
             bool
         )
@@ -253,7 +249,6 @@ def swarm_simulation(func):
             particle.update_velocity(swarm_best_pos)
             particle.update_position()
 
-        pg.add_point(nb_iter, swarm_best_fitness)
         decrease_weight()
 
     return swarm_best_pos, swarm_best_fitness, nb_iter + 1
@@ -262,14 +257,9 @@ def swarm_simulation(func):
 if __name__ == "__main__":
 
     for i in xrange(NB_RUN):
-        if GRAPH_OUTPUT:
-            pg.init(NB_DIMENSIONS)
-
         (solution, fitness, nb_iter) = swarm_simulation(EVAL_FUNCTION)
 
         value, weight = calculate_knapsack(solution)
 
         print "End (value = %.3f ; weight = %.3f ; iteration = %d)" % \
             (value, weight, nb_iter)
-
-        pg.show()
