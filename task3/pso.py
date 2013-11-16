@@ -1,7 +1,8 @@
 #!/bin/env python2
 # -*- coding: utf-8 -*-
 
-from random import seed, random
+from random import seed, random, uniform
+from math import exp
 
 import numpy as np
 
@@ -11,28 +12,38 @@ import plot_graph as pg
 # Init list of packages
 packages = []
 total_value = 0
+total_weight = 0
 with open("pso-packages.txt") as f:
     for line in f:
         val, weight = (float(x) for x in line.strip().split(","))
         packages.append((val, weight))
         total_value += val
+        total_weight += weight
 
 
 CONTAINER_WEIGHT = 1000
 
-seed(42)  # we set the random seed in order to have always the same results
+# We calculate probability we should take a package during initialization
+# of our knapsack
+avg_weight = total_weight / len(packages)
+avg_max_pkg = CONTAINER_WEIGHT / avg_weight
+PROBA_TAKE_PKG = avg_max_pkg / len(packages)
+
+
+# seed(42)  # we set the random seed in order to have always the same results
+
 
 GRAPH_OUTPUT = False
-DECREASE_WEIGHT = True
+DECREASE_WEIGHT = False
 
-NB_RUN = 10  # how many times we will run algorithm
+NB_RUN = 1  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
-NB_PARTICLES = 12
-ITER_MAX = 1000
+NB_PARTICLES = 50
+ITER_MAX = 100
 
-# limits of velocity and of the search space
-V_MIN, V_MAX = 0.0, 1.0
+# limits of velocity
+V_MIN, V_MAX = -4.25, 4.25
 
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
@@ -40,7 +51,13 @@ C1 = 1.5  # weight of particle memory
 C2 = 1.5  # weight of group influence
 
 
-def knapsack_problem(x):
+
+def calculate_knapsack(x):
+    """
+        Calculates value and weight of a knapsack
+        x is a boolean vector where len(x) == len(packages)
+        and x[i] == True indicates we take the packages packages[i]
+    """
 
     if len(x) != len(packages):
         raise Exception()
@@ -51,10 +68,25 @@ def knapsack_problem(x):
         value += packages[dim][0] * x[dim]
         weight += packages[dim][1] * x[dim]
 
-    if weight <= CONTAINER_WEIGHT:
-        return total_value - value
-    else:
-        return total_value + weight
+    return value, weight
+
+
+def knapsack_problem(x):
+    """
+        Returns an "evaluation" of our knapsack (x): how far we are from the
+        knapsack which maximizes value and keep weight under CONTAINER_WEIGHT
+    """
+
+    if len(x) != len(packages):
+        raise Exception()
+
+    value, weight = calculate_knapsack(x)
+
+    penalty = 0
+    if weight > CONTAINER_WEIGHT:
+        penalty += weight
+
+    return value - penalty
 
 
 EVAL_FUNCTION = knapsack_problem
@@ -88,26 +120,28 @@ class Particle():
         self.__init_velocity()
 
         self.fitness = -1
-        self.best_fitness = -1
+        self.best_fitness = None
         self.best_position = None
 
     def __init_position(self):
         """
             Particle is generated in a random position
+            It is determined using probability calculated above
         """
 
         self.position = np.array(
-            [True if random() < 0.5 else False for i in xrange(NB_DIMENSIONS)],
+            [True if random() <= PROBA_TAKE_PKG else False \
+                for i in xrange(NB_DIMENSIONS)],
             bool
         )
 
     def __init_velocity(self):
         """
-            Random velocity between 0 and 1 in each dimension
+            Random velocity between V_MIN and V_MAX in each dimension
         """
 
         self.velocity = np.array(
-            [random() for i in xrange(NB_DIMENSIONS)],
+            [uniform(V_MIN, V_MAX) for i in xrange(NB_DIMENSIONS)],
             float
         )
 
@@ -118,7 +152,7 @@ class Particle():
         """
 
         self.fitness = func(self.position)
-        if self.fitness < self.best_fitness or self.best_fitness == -1:
+        if self.fitness > self.best_fitness or self.best_fitness is None:
             self.best_fitness = self.fitness
             self.best_position = self.position
 
@@ -145,16 +179,22 @@ class Particle():
 
     def update_position(self):
         """
-            Updates particle position following this rule:
-            position = previous position + velocity
-            Position is limited by P_MIN and P_MAX
+            Updates particle position according to velocity.
+            Here, velocity is the probability position[i] is True or False
+            We use a sigmoid function to calculate this probability
         """
 
-        self.position = self.velocity < 0.5
+        # We can't just write:
+        # self.position = random() < 1 / (1 + math.exp(-self.velocity))
+        # Syntax is correct but we should generate a new random value for each
+        # element from the velocity vector
+        new_values = []
+        for val in self.velocity:
+            new_values.append(
+                random() < 1 / (1 + exp(-val))
+            )
 
-    def __str__(self):
-
-        return "Particle #%d: position %s " % (self.id, str(self.position))
+        self.position = np.array(new_values, bool)
 
 
 def generate_swarm():
@@ -165,7 +205,7 @@ def generate_swarm():
     swarm = []
 
     for i in xrange(NB_PARTICLES):
-        swarm.append(Particle(i))
+        swarm.append(Particle(i + 1))
 
     return swarm
 
@@ -191,44 +231,32 @@ def swarm_simulation(func):
     swarm = generate_swarm()
 
     swarm_best_pos = None
-    swarm_best_fitness = -1
+    swarm_best_fitness = None
 
     nb_iter = 0
     for nb_iter in xrange(ITER_MAX):
         # if the fitness is good enough, we quit the loop
-        if swarm_best_fitness <= 0.001 and swarm_best_fitness != -1:
+        if swarm_best_fitness is not None and \
+                total_value - swarm_best_fitness <= 0.001:
             break
 
         # we calculate the best fitness for the particle group
         for particle in swarm:
             fitness = particle.evaluate(func)
-            if fitness < swarm_best_fitness or swarm_best_fitness == -1:
+            if fitness > swarm_best_fitness or swarm_best_fitness is None:
+                print fitness
                 swarm_best_fitness = fitness
                 swarm_best_pos = particle.position
-            pg.add_particle(particle)
 
         # then we update particle positions
         for particle in swarm:
             particle.update_velocity(swarm_best_pos)
             particle.update_position()
 
+        pg.add_point(nb_iter, swarm_best_fitness)
         decrease_weight()
 
     return swarm_best_pos, swarm_best_fitness, nb_iter + 1
-
-
-def calculate_knapsack(x):
-
-    if len(x) != len(packages):
-        raise Exception()
-
-    value = 0
-    weight = 0
-    for dim in xrange(len(x)):
-        value += packages[dim][0] * x[dim]
-        weight += packages[dim][1] * x[dim]
-
-    return value, weight
 
 
 if __name__ == "__main__":
