@@ -8,26 +8,26 @@ import numpy as np
 import plot_graph as pg
 
 
-seed(42)  # we set the random seed in order to have always the same results
+#seed(42)  # we set the random seed in order to have always the same results
 
-GRAPH_OUTPUT = True
-DECREASE_WEIGHT = True
+GRAPH_OUTPUT = False
+DECREASE_WEIGHT = False
 
-NB_RUN = 1  # how many times we will run algorithm
+NB_RUN = 10  # how many times we will run algorithm
 
-NB_DIMENSIONS = 1  # number of dimensions of the search space
-NB_PARTICLES = 9
+NB_DIMENSIONS = 2  # number of dimensions of the search space
+NB_PARTICLES = 10
 NB_NEIGHBOURS = min(3, NB_PARTICLES)
 ITER_MAX = 1000
 
 # limits of velocity and of the search space
-V_MAX, P_MAX = 5.0, 1000.0
+V_MAX, P_MAX = 0.01, 1.0
 V_MIN, P_MIN = (-1) * V_MAX, (-1) * P_MAX
 
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
 C1 = 1.5  # weight of particle memory
-C2 = 2  # weight of group influence
+C2 = 1.5  # weight of group influence
 
 
 def circle_problem(x):
@@ -189,7 +189,7 @@ def __update_group(group, particle, distance):
             break
 
 
-def get_group_best_pos(particle, swarm, group_len=NB_NEIGHBOURS):
+def get_best_group_pos(particle, swarm, group_len=NB_NEIGHBOURS):
     """
         Returns the best position of group_len nearest neighbours of particle
     """
@@ -252,7 +252,7 @@ def swarm_simulation(func):
 
         # then we update particle positions
         for particle in swarm:
-            group_best_pos = get_group_best_pos(particle, swarm)
+            group_best_pos = get_best_group_pos(particle, swarm)
             particle.update_velocity(group_best_pos)
             particle.update_position()
 

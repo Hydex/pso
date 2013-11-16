@@ -8,23 +8,22 @@ import numpy as np
 import plot_graph as pg
 
 
-seed(42)  # we set the random seed in order to have always the same results
+# seed(42)  # we set the random seed in order to have always the same results
 
-GRAPH_OUTPUT = True
+GRAPH_OUTPUT = False
 
 NB_RUN = 10  # how many times we will run algorithm
 
 NB_DIMENSIONS = 2  # number of dimensions of the search space
-NB_PARTICLES = 2
+NB_PARTICLES = 10
 ITER_MAX = 1000
 
 # limits of velocity and of the search space
-V_MAX, P_MAX = 5.0, 100.0
+V_MAX, P_MAX = 0.01, 1.0
 V_MIN, P_MIN = (-1) * V_MAX, (-1) * P_MAX
 
-W = 1  # weight of inertia during velocity update (not required here)
 C1 = 1.5  # weight of particle memory
-C2 = 2  # weight of group influence
+C2 = 1.5  # weight of group influence
 
 
 def circle_problem(x):
@@ -118,7 +117,7 @@ class Particle():
         r1 = random()
         r2 = random()
 
-        inertia = W * self.velocity
+        inertia = self.velocity
         particle_memory = C1 * r1 * (self.best_position - self.position)
         influence = C2 * r2 * (swarm_best_pos - self.position)
 
