@@ -23,12 +23,12 @@ CONTAINER_WEIGHT = 1000
 seed(42)  # we set the random seed in order to have always the same results
 
 GRAPH_OUTPUT = False
-DECREASE_WEIGHT = False
+DECREASE_WEIGHT = True
 
-NB_RUN = 1  # how many times we will run algorithm
+NB_RUN = 10  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
-NB_PARTICLES = 9
+NB_PARTICLES = 12
 ITER_MAX = 1000
 
 # limits of velocity and of the search space
@@ -37,7 +37,7 @@ V_MIN, V_MAX = 0.0, 1.0
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
 C1 = 1.5  # weight of particle memory
-C2 = 2  # weight of group influence
+C2 = 1.5  # weight of group influence
 
 
 def knapsack_problem(x):
