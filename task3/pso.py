@@ -32,12 +32,12 @@ PROBA_TAKE_PKG = avg_max_pkg / len(packages)
 # np.random.seed(42)
 
 
-DECREASE_WEIGHT = False
+DECREASE_WEIGHT = True
 
 NB_RUN = 1  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
-NB_PARTICLES = 100
+NB_PARTICLES = 50
 ITER_MAX = 500
 
 # limits of velocity
@@ -45,8 +45,8 @@ V_MIN, V_MAX = -4.25, 4.25
 
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
-C1 = 0.5  # weight of particle memory
-C2 = 4  # weight of group influence
+C1 = 1.5  # weight of particle memory
+C2 = 0.5  # weight of group influence
 
 
 def calculate_knapsack(x):
@@ -213,17 +213,13 @@ def swarm_simulation(func):
 
     nb_iter = 0
     for nb_iter in xrange(ITER_MAX):
-        # if the fitness is good enough, we quit the loop
-        if swarm_best_fitness is not None and \
-                total_value - swarm_best_fitness <= 0.001:
-            break
-
         # we calculate the best fitness for the particle group
         for particle in swarm:
             fitness = particle.evaluate(func)
             if fitness > swarm_best_fitness or swarm_best_fitness is None:
                 swarm_best_fitness = fitness
                 swarm_best_pos = particle.position
+
                 print nb_iter, fitness
 
         # then we update particle positions
