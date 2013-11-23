@@ -3,6 +3,7 @@
 
 from random import seed, random, uniform
 from math import exp
+import time as t
 
 import numpy as np
 
@@ -28,7 +29,7 @@ avg_max_pkg = CONTAINER_WEIGHT / avg_weight
 PROBA_TAKE_PKG = avg_max_pkg / len(packages)
 
 
-# seed(42)  # we set the random seed in order to have always the same results
+seed(42)  # we set the random seed in order to have always the same results
 
 
 DECREASE_WEIGHT = False
@@ -36,8 +37,8 @@ DECREASE_WEIGHT = False
 NB_RUN = 1  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
-NB_PARTICLES = 2000
-ITER_MAX = 500
+NB_PARTICLES = 100
+ITER_MAX = 10
 
 # limits of velocity
 V_MIN, V_MAX = -4.25, 4.25
@@ -125,21 +126,14 @@ class Particle():
             It is determined using probability calculated above
         """
 
-        self.position = np.array(
-            [True if random() <= PROBA_TAKE_PKG else False
-                for i in xrange(NB_DIMENSIONS)],
-            bool
-        )
+        self.position = np.random.random(NB_DIMENSIONS) <= PROBA_TAKE_PKG
 
     def __init_velocity(self):
         """
             Random velocity between V_MIN and V_MAX in each dimension
         """
 
-        self.velocity = np.array(
-            [uniform(V_MIN, V_MAX) for i in xrange(NB_DIMENSIONS)],
-            float
-        )
+        self.velocity = np.random.uniform(V_MIN, V_MAX, NB_DIMENSIONS)
 
     def evaluate(self, func):
         """
@@ -180,17 +174,7 @@ class Particle():
             We use a sigmoid function to calculate this probability
         """
 
-        # We can't just write:
-        # self.position = random() < 1 / (1 + math.exp(-self.velocity))
-        # Syntax is correct but we should generate a new random value for each
-        # element from the velocity vector
-        new_values = []
-        for val in self.velocity:
-            new_values.append(
-                random() < 1 / (1 + exp(-val))
-            )
-
-        self.position = np.array(new_values, bool)
+        self.position = np.random.random(NB_DIMENSIONS) < 1 / (1 + exp(-val))
 
 
 def generate_swarm():
@@ -257,9 +241,13 @@ def swarm_simulation(func):
 if __name__ == "__main__":
 
     for i in xrange(NB_RUN):
+        start = t.time()
+
         (solution, fitness, nb_iter) = swarm_simulation(EVAL_FUNCTION)
 
         value, weight = calculate_knapsack(solution)
 
         print "End (value = %.3f ; weight = %.3f ; iteration = %d)" % \
             (value, weight, nb_iter)
+
+        print "Elapsed time: ", (t.time() - start), " seconds"
