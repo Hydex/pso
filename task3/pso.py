@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from random import seed, random, uniform
-from math import exp
 import time as t
 
 import numpy as np
@@ -29,7 +28,8 @@ avg_max_pkg = CONTAINER_WEIGHT / avg_weight
 PROBA_TAKE_PKG = avg_max_pkg / len(packages)
 
 
-seed(42)  # we set the random seed in order to have always the same results
+# seed(42)  # we set the random seed in order to have always the same results
+# np.random.seed(42)
 
 
 DECREASE_WEIGHT = False
@@ -38,15 +38,15 @@ NB_RUN = 1  # how many times we will run algorithm
 
 NB_DIMENSIONS = len(packages)
 NB_PARTICLES = 100
-ITER_MAX = 10
+ITER_MAX = 500
 
 # limits of velocity
 V_MIN, V_MAX = -4.25, 4.25
 
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
-C1 = 1.5  # weight of particle memory
-C2 = 1.5  # weight of group influence
+C1 = 0.5  # weight of particle memory
+C2 = 4  # weight of group influence
 
 
 def calculate_knapsack(x):
@@ -56,12 +56,11 @@ def calculate_knapsack(x):
         and x[i] == True indicates we take the packages packages[i]
     """
 
-    if len(x) != len(packages):
-        raise Exception()
+    num_min_dim = min(len(x), len(packages))
 
     value = 0
     weight = 0
-    for dim in xrange(len(x)):
+    for dim in xrange(num_min_dim):
         value += packages[dim][0] * x[dim]
         weight += packages[dim][1] * x[dim]
 
@@ -73,9 +72,6 @@ def knapsack_problem(x):
         Returns an "evaluation" of our knapsack (x): how far we are from the
         knapsack which maximizes value and keep weight under CONTAINER_WEIGHT
     """
-
-    if len(x) != len(packages):
-        raise Exception()
 
     value, weight = calculate_knapsack(x)
 
@@ -133,7 +129,8 @@ class Particle():
             Random velocity between V_MIN and V_MAX in each dimension
         """
 
-        self.velocity = np.random.uniform(V_MIN, V_MAX, NB_DIMENSIONS)
+        self.velocity = np.empty(NB_DIMENSIONS)
+        self.velocity.fill(V_MAX)
 
     def evaluate(self, func):
         """
@@ -174,7 +171,8 @@ class Particle():
             We use a sigmoid function to calculate this probability
         """
 
-        self.position = np.random.random(NB_DIMENSIONS) < 1 / (1 + exp(-val))
+        sigmoid_vector = 1 / (1 + np.exp(self.velocity))
+        self.position = np.random.random(NB_DIMENSIONS) < sigmoid_vector
 
 
 def generate_swarm():
@@ -224,9 +222,9 @@ def swarm_simulation(func):
         for particle in swarm:
             fitness = particle.evaluate(func)
             if fitness > swarm_best_fitness or swarm_best_fitness is None:
-                print fitness
                 swarm_best_fitness = fitness
                 swarm_best_pos = particle.position
+                print nb_iter, fitness
 
         # then we update particle positions
         for particle in swarm:
