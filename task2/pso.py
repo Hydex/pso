@@ -11,7 +11,7 @@ import plot_graph as pg
 #seed(42)  # we set the random seed in order to have always the same results
 
 GRAPH_OUTPUT = False
-DECREASE_WEIGHT = False
+DECREASE_WEIGHT = True
 
 NB_RUN = 10  # how many times we will run algorithm
 
@@ -264,6 +264,8 @@ def swarm_simulation(func):
 if __name__ == "__main__":
 
     for i in xrange(NB_RUN):
+        weight = 1.0
+
         if GRAPH_OUTPUT:
             pg.init(NB_DIMENSIONS)
 

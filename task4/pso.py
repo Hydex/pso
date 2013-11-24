@@ -40,8 +40,8 @@ avg_max_pkg = min(
 PROBA_TAKE_PKG = avg_max_pkg / nb_packages
 
 
-seed(42)  # we set the random seed in order to have always the same results
-np.random.seed(42)
+# seed(42)  # we set the random seed in order to have always the same results
+# np.random.seed(42)
 
 
 DECREASE_WEIGHT = False
@@ -57,7 +57,7 @@ V_MIN, V_MAX = -4.25, 4.25
 
 MIN_WEIGHT = 0.4
 weight = 1.0  # weight of inertia during velocity update
-C1 = 1.5  # weight of particle memory
+C1 = 1.0  # weight of particle memory
 C2 = 1.5  # weight of group influence
 
 

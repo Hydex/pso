@@ -10,11 +10,11 @@ import plot_graph as pg
 
 # seed(42)  # we set the random seed in order to have always the same results
 
-GRAPH_OUTPUT = False
+GRAPH_OUTPUT = True
 
 NB_RUN = 10  # how many times we will run algorithm
 
-NB_DIMENSIONS = 2  # number of dimensions of the search space
+NB_DIMENSIONS = 1  # number of dimensions of the search space
 NB_PARTICLES = 10
 ITER_MAX = 1000
 
