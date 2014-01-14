@@ -1,6 +1,6 @@
 # PSO
 
-Particule Swarn Optimization program for AI programming course
+Particule Swarm Optimization program for AI programming course
 
 
 ## External libraries
